@@ -135,3 +135,15 @@ def download_file(aws_s3_client, buket_name, key,):
         logging.error(e)
         return False
     return True
+
+
+
+def delete_file(aws_s3_client, buket_name, key):
+    try:
+        client = aws_s3_client.client('s3')
+        client.delete_object(Bucket=buket_name, Key=key)
+
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True

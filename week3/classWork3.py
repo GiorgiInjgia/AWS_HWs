@@ -237,6 +237,15 @@ parser.add_argument("-fn",
                     help="file name",
                     default=None)
 
+parser.add_argument("-del",
+                    "--delete_file",
+                    help="flag for  set expaired object policy.",
+                    choices=["False", "True"],
+                    type=str,
+                    nargs="?",
+                    const="True",
+                    default="False")
+
 
 def main():
     s3_client = init_client()
@@ -271,6 +280,10 @@ def main():
         if args.download_file == "True" and args.file_name:
             multipart_upload(s3_client, args.bucket_name, args.file_name)
             print("file is downloaded")
+
+        if args.delete_file == "True" and args.file_name:
+            delete_file(s3_client, args.bucket_name, args.file_name)
+            print("file is deleted")
 
         if args.count_object == "True" and args.list_objects == "True":
             objs = get_list_objects(s3_client, args.bucket_name)
