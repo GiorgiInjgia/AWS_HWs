@@ -4,7 +4,7 @@ from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 import logging
-
+import datetime
 from os import getenv
 from dotenv import load_dotenv
 
@@ -58,3 +58,43 @@ def list_buckets(aws_s3_client):
 
     except ClientError as e:
         logging.error(e)
+
+
+
+def versioning(aws_s3_client, bucket_name, status : bool):
+    versioning_status = "Enabled" if status else "Suspended"
+    aws_s3_client.put_bucket_versioning(
+        Bucket=bucket_name,
+        VersioningConfiguration={
+            "Status": versioning_status
+        }
+    )
+
+
+def list_object_versions(aws_s3_client, bucket_name, file_name):
+    versions = aws_s3_client.list_object_versions(
+        Bucket=bucket_name,
+        Prefix=file_name
+    )
+
+    # print(versions)
+    for version in versions['Versions']:
+        version_id = version['VersionId']
+        file_key = version['Key'],
+        is_latest = version['IsLatest']
+        modified_at = version['LastModified']
+
+        print(version_id, file_key, is_latest, modified_at)
+
+
+def delete_old_version_or_object(aws_s3_client, bucket_name):
+    current_date = datetime.datetime.now(datetime.timezone.utc)
+
+    versions = aws_s3_client.list_object_versions(Bucket=bucket_name)['Versions']
+
+    for version in versions:
+        creation_date = version['LastModified']
+        age = current_date - creation_date
+
+        if age > datetime.timedelta(days=180):
+            aws_s3_client.delete_object(Bucket=bucket_name, Key=version['Key'], VersionId=version['VersionId'])
